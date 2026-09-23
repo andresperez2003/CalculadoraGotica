@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Calculadora con estética gótica e historial de operaciones.">
+<title>Calculadora Gótica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --ink: #0c0a0f;
+    --stone: #16121a;
+    --stone-2: #1f1924;
+    --stone-3: #2a2230;
+    --bone: #e8dfcf;
+    --ash: #9a8f9e;
+    --ash-dim: #6b6270;
+    --blood: #8e1b26;
+    --blood-hi: #b3283a;
+    --gold: #b89a5e;
+    --gold-dim: #6e5c3a;
+    --line: rgba(184,154,94,.22);
+    --f-black: "UnifrakturMaguntia", "Old English Text MT", "Times New Roman", serif;
+    --f-body: "Cormorant Garamond", "Garamond", "Georgia", serif;
+    --f-cap: "Cinzel", "Trajan Pro", "Georgia", serif;
+  }
+  html, body { height: 100%; }
+  body {
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 110%, rgba(184,154,94,.07), transparent 70%),
+      var(--ink);
+    color: var(--bone);
+    font-family: var(--f-body);
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 32px 48px;
+  }
+  header { text-align: center; margin-bottom: 28px; }
+  h1 {
+    font-family: var(--f-black);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 7vw, 4.2rem);
+    line-height: 1;
+    margin: 0;
+    color: var(--bone);
+    text-wrap: balance;
+  }
+  .sub {
+    font-family: var(--f-cap);
+    font-size: .72rem;
+    letter-spacing: .32em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 10px;
+  }
+  .ornament {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    color: var(--gold-dim); margin-top: 14px;
+  }
+  .ornament::before, .ornament::after {
+    content: ""; height: 1px; width: min(140px, 25vw);
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+    justify-content: center;
+  }
+  @media (max-width: 820px) {
+    .grid { grid-template-columns: minmax(0, 1fr); }
+    .calc { max-width: 440px; margin: 0 auto; width: 100%; }
+  }
+
+  /* ——— Calculator: a lancet-arch window ——— */
+  .calc {
+    position: relative;
+    background: linear-gradient(180deg, var(--stone-2), var(--stone));
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 64px 22px 22px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,.8), inset 0 1px 0 rgba(232,223,207,.05);
+  }
+  .calc::before {
+    content: "";
+    position: absolute; inset: 8px;
+    border: 1px solid rgba(184,154,94,.12);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  .wrap { position: relative; }
+  .dog {
+    position: absolute;
+    top: -114px; right: 26px;
+    width: 104px; height: auto;
+    z-index: 2;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,.6));
+    cursor: pointer;
+  }
+  .dog .tail { transform-box: fill-box; transform-origin: left bottom; animation: wag 1.4s ease-in-out infinite; }
+  .dog:hover .tail { animation-duration: .35s; }
+  .dog .d-eyes { transform-box: fill-box; transform-origin: center; animation: blink 6.5s 1.2s infinite; }
+  @keyframes wag { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(14deg); } }
+  @media (prefers-reduced-motion: reduce) { .dog .tail, .dog .d-eyes { animation: none; } }
+  .calc { margin-top: 0; box-sizing: border-box; }
+  @media (max-width: 820px) { .calc { margin-top: 92px; } }
+  .ledger { position: relative; }
+  @media (max-width: 820px) { .ledger { margin-top: 120px; } }
+  .mascot {
+    position: absolute;
+    top: -90px; left: 26px;
+    width: 112px; height: auto;
+    z-index: 2;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,.6));
+    cursor: pointer;
+  }
+  .mascot .wing { transform-box: fill-box; animation: flap 3.2s ease-in-out infinite; }
+  .mascot .wing.l { transform-origin: right center; }
+  .mascot .wing.r { transform-origin: left center; animation-name: flapR; }
+  .mascot .eyes { transform-box: fill-box; transform-origin: center; animation: blink 5s infinite; }
+  .mascot:hover .wing { animation-duration: .5s; }
+  @keyframes flap { 0%,100% { transform: rotate(0); } 50% { transform: rotate(10deg); } }
+  @keyframes flapR { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-10deg); } }
+  @keyframes blink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+  @media (prefers-reduced-motion: reduce) {
+    .mascot .wing, .mascot .eyes { animation: none; }
+  }
+  .corner {
+    position: absolute; width: 22px; height: 22px;
+    border-color: var(--gold-dim); border-style: solid; border-width: 0;
+    pointer-events: none;
+  }
+  .corner.tl { top: 14px; left: 14px; border-top-width: 2px; border-left-width: 2px; }
+  .corner.tr { top: 14px; right: 14px; border-top-width: 2px; border-right-width: 2px; }
+  .corner.bl { bottom: 14px; left: 14px; border-bottom-width: 2px; border-left-width: 2px; }
+  .corner.br { bottom: 14px; right: 14px; border-bottom-width: 2px; border-right-width: 2px; }
+  .rose {
+    position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    width: 34px; height: 34px;
+  }
+  .display {
+    position: relative;
+    background: #07060a;
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    padding: 14px 16px 12px;
+    text-align: right;
+    margin-bottom: 18px;
+    box-shadow: inset 0 0 24px rgba(142,27,38,.18);
+    min-height: 104px;
+    display: flex; flex-direction: column; justify-content: flex-end; gap: 2px;
+  }
+  .expr {
+    font-family: var(--f-body);
+    font-style: italic;
+    color: var(--ash);
+    font-size: 1.05rem;
+    min-height: 1.5em;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+  .expr::-webkit-scrollbar { display: none; }
+  .result {
+    font-family: var(--f-body);
+    font-weight: 600;
+    font-size: clamp(2.1rem, 9vw, 2.8rem);
+    line-height: 1.1;
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--bone);
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+  .result::-webkit-scrollbar { display: none; }
+  .result.err { color: var(--blood-hi); font-size: 1.4rem; font-style: italic; font-weight: 500; }
+
+  .keys {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .key {
+    font-family: var(--f-body);
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-variant-numeric: lining-nums;
+    color: var(--bone);
+    background: linear-gradient(180deg, var(--stone-3), var(--stone-2));
+    border: 1px solid rgba(184,154,94,.18);
+    border-radius: 26px 26px 4px 4px;
+    height: 60px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, transform .06s, box-shadow .15s;
+  }
+  .key:hover { border-color: var(--gold-dim); background: linear-gradient(180deg, #342a3b, var(--stone-3)); }
+  .key:active, .key.pressed { transform: translateY(1px); box-shadow: inset 0 2px 8px rgba(0,0,0,.6); }
+  .key:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .key.fn { font-family: var(--f-cap); font-size: .95rem; letter-spacing: .08em; color: var(--gold); }
+  .key.op { color: var(--gold); font-size: 1.7rem; background: linear-gradient(180deg, #221a20, #19131a); }
+  .key.eq {
+    background: linear-gradient(180deg, var(--blood-hi), var(--blood));
+    border-color: rgba(232,223,207,.2);
+    color: var(--bone);
+    font-size: 1.8rem;
+    box-shadow: 0 0 18px -4px rgba(179,40,58,.6);
+  }
+  .key.eq:hover { background: linear-gradient(180deg, #c33246, var(--blood-hi)); }
+  .key.zero { grid-column: span 2; }
+  .hint {
+    text-align: center;
+    font-size: .85rem;
+    font-style: italic;
+    color: var(--ash-dim);
+    margin-top: 14px;
+  }
+
+  /* ——— History: the ledger ——— */
+  .ledger {
+    background: linear-gradient(180deg, rgba(31,25,36,.8), rgba(22,18,26,.8));
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 22px 16px;
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  .ledger-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .ledger h2 {
+    font-family: var(--f-black);
+    font-weight: 400;
+    font-size: 2rem;
+    margin: 0;
+    line-height: 1;
+  }
+  .count {
+    font-family: var(--f-cap);
+    font-size: .7rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ash);
+  }
+  .list {
+    list-style: none; margin: 0; padding: 0;
+    max-height: 480px;
+    overflow-y: auto;
+    scrollbar-color: var(--gold-dim) transparent;
+  }
+  .entry {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 14px;
+    padding: 12px 6px;
+    border-bottom: 1px dashed rgba(184,154,94,.14);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background .15s;
+  }
+  .entry:hover, .entry:focus-visible { background: rgba(142,27,38,.12); outline: none; }
+  .entry:focus-visible { box-shadow: inset 0 0 0 1px var(--gold); }
+  .num {
+    grid-row: span 2;
+    font-family: var(--f-cap);
+    font-size: .8rem;
+    color: var(--gold-dim);
+    padding-top: 4px;
+    min-width: 2.2em;
+  }
+  .e-expr {
+    font-style: italic;
+    color: var(--ash);
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+  .e-res {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  }
+  .e-val {
+    font-weight: 600;
+    font-size: 1.35rem;
+    font-variant-numeric: lining-nums tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  .e-val::before { content: "= "; color: var(--blood-hi); }
+  .e-time {
+    font-size: .8rem;
+    color: var(--ash-dim);
+    font-family: var(--f-cap);
+    letter-spacing: .06em;
+  }
+  .tag {
+    font-family: var(--f-cap);
+    font-size: .6rem;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    border-radius: 2px;
+    padding: 1px 5px;
+    margin-left: 6px;
+    vertical-align: 2px;
+  }
+  .empty {
+    text-align: center;
+    padding: 40px 10px;
+    color: var(--ash-dim);
+    font-style: italic;
+  }
+  .ledger-foot {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding-top: 14px;
+    font-size: .9rem; color: var(--ash-dim); font-style: italic;
+  }
+  .btn {
+    font-family: var(--f-cap);
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--ash);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .btn:hover { color: var(--bone); border-color: var(--gold-dim); }
+  .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .btn.danger { color: var(--bone); background: var(--blood); border-color: var(--blood-hi); }
+  .btn:disabled { opacity: .4; cursor: default; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+<style>
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Calculadora Gótica</h1>
+    <div class="sub">Scriptorium de los números</div>
+    <div class="ornament" aria-hidden="true">✠</div>
+  </header>
+
+  <main class="grid">
+    <section class="calc" aria-label="Calculadora">
+      <svg class="mascot" viewBox="0 0 140 120" role="img" aria-label="Nocturna, la gata guardiana de la calculadora">
+        <title>Nocturna, la gata guardiana</title>
+        <g stroke="#6e5c3a" stroke-width="1.2" stroke-linejoin="round">
+          <path class="wing l" fill="#2a1a24" d="M56,70 C42,50 22,44 6,52 C14,57 16,62 14,69 C20,65 26,67 28,73 C32,68 38,69 40,75 C44,71 50,71 56,76 Z"/>
+          <path class="wing r" fill="#2a1a24" d="M84,70 C98,50 118,44 134,52 C126,57 124,62 126,69 C120,65 114,67 112,73 C108,68 102,69 100,75 C96,71 90,71 84,76 Z"/>
+          <path d="M88,106 C108,106 116,94 111,82 C107,73 112,66 120,68" fill="none" stroke="#1c1520" stroke-width="7" stroke-linecap="round"/>
+          <ellipse cx="70" cy="93" rx="22" ry="19" fill="#1c1520"/>
+          <path d="M48,50 L45,24 L63,40 Z" fill="#1c1520"/>
+          <path d="M92,50 L95,24 L77,40 Z" fill="#1c1520"/>
+          <ellipse cx="70" cy="58" rx="27" ry="22" fill="#1c1520"/>
+          <ellipse cx="60" cy="111" rx="7" ry="4" fill="#1c1520"/>
+          <ellipse cx="80" cy="111" rx="7" ry="4" fill="#1c1520"/>
+        </g>
+        <path d="M50,44 L48,31 L58,40 Z" fill="#8e1b26"/>
+        <path d="M90,44 L92,31 L82,40 Z" fill="#8e1b26"/>
+        <g class="eyes">
+          <ellipse cx="60" cy="57" rx="5.5" ry="6.5" fill="#c9303f"/>
+          <ellipse cx="80" cy="57" rx="5.5" ry="6.5" fill="#c9303f"/>
+          <ellipse cx="60" cy="57.5" rx="1.4" ry="4.8" fill="#0c0a0f"/>
+          <ellipse cx="80" cy="57.5" rx="1.4" ry="4.8" fill="#0c0a0f"/>
+          <circle cx="62" cy="54.5" r="1.3" fill="#e8dfcf"/>
+          <circle cx="82" cy="54.5" r="1.3" fill="#e8dfcf"/>
+        </g>
+        <path d="M67.5,65 L72.5,65 L70,67.8 Z" fill="#b89a5e"/>
+        <path d="M65,69 Q67.5,71.5 70,69 Q72.5,71.5 75,69" fill="none" stroke="#9a8f9e" stroke-width="1" stroke-linecap="round"/>
+        <path d="M66.6,70 L67.6,73.4 L68.6,70.4 Z M71.4,70.4 L72.4,73.4 L73.4,70 Z" fill="#e8dfcf"/>
+        <g stroke="#6b6270" stroke-width=".8" stroke-linecap="round">
+          <path d="M52,64 L40,62 M52,67 L41,69"/>
+          <path d="M88,64 L100,62 M88,67 L99,69"/>
+        </g>
+        <circle cx="70" cy="84" r="4.5" fill="#b89a5e"/>
+        <circle cx="72" cy="82.6" r="4" fill="#1c1520"/>
+      </svg>
+      <span class="corner tl" aria-hidden="true"></span><span class="corner tr" aria-hidden="true"></span>
+      <span class="corner bl" aria-hidden="true"></span><span class="corner br" aria-hidden="true"></span>
+      <svg class="rose" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="18" fill="none" stroke="#6e5c3a" stroke-width="1"/>
+        <circle cx="20" cy="20" r="5" fill="#8e1b26" stroke="#b89a5e" stroke-width=".8"/>
+        <g fill="none" stroke="#b89a5e" stroke-width=".8">
+          <ellipse cx="20" cy="9" rx="3.2" ry="6"/>
+          <ellipse cx="20" cy="31" rx="3.2" ry="6"/>
+          <ellipse cx="9" cy="20" rx="6" ry="3.2"/>
+          <ellipse cx="31" cy="20" rx="6" ry="3.2"/>
+          <ellipse cx="12.2" cy="12.2" rx="3" ry="5.6" transform="rotate(-45 12.2 12.2)"/>
+          <ellipse cx="27.8" cy="27.8" rx="3" ry="5.6" transform="rotate(-45 27.8 27.8)"/>
+          <ellipse cx="27.8" cy="12.2" rx="3" ry="5.6" transform="rotate(45 27.8 12.2)"/>
+          <ellipse cx="12.2" cy="27.8" rx="3" ry="5.6" transform="rotate(45 12.2 27.8)"/>
+        </g>
+      </svg>
+
+      <div class="display" aria-live="polite">
+        <div class="expr" id="expr"></div>
+        <div class="result" id="result">0</div>
+      </div>
+
+      <div class="keys" id="keys">
+        <button class="key fn" id="k-clear" data-act="clear" aria-label="Borrar todo">C</button>
+        <button class="key fn" id="k-back" data-act="back" aria-label="Borrar último">⌫</button>
+        <button class="key fn" id="k-pct" data-act="pct" aria-label="Porcentaje">%</button>
+        <button class="key op" id="k-div" data-op="÷" aria-label="Dividir">÷</button>
+
+        <button class="key" id="k-7" data-num="7">7</button>
+        <button class="key" id="k-8" data-num="8">8</button>
+        <button class="key" id="k-9" data-num="9">9</button>
+        <button class="key op" id="k-mul" data-op="×" aria-label="Multiplicar">×</button>
+
+        <button class="key" id="k-4" data-num="4">4</button>
+        <button class="key" id="k-5" data-num="5">5</button>
+        <button class="key" id="k-6" data-num="6">6</button>
+        <button class="key op" id="k-sub" data-op="−" aria-label="Restar">−</button>
+
+        <button class="key" id="k-1" data-num="1">1</button>
+        <button class="key" id="k-2" data-num="2">2</button>
+        <button class="key" id="k-3" data-num="3">3</button>
+        <button class="key op" id="k-add" data-op="+" aria-label="Sumar">+</button>
+
+        <button class="key fn" id="k-neg" data-act="neg" aria-label="Cambiar signo">±</button>
+        <button class="key" id="k-0" data-num="0">0</button>
+        <button class="key" id="k-dot" data-num="." aria-label="Coma decimal">,</button>
+        <button class="key eq" id="k-eq" data-act="eq" aria-label="Igual">=</button>
+      </div>
+      <p class="hint">También responde al teclado: números, + − * /, Enter y Retroceso.</p>
+    </section>
+
+    <section class="ledger" aria-label="Historial de operaciones">
+      <svg class="dog" viewBox="0 0 120 134" role="img" aria-label="Umbra, el perro guardián">
+        <title>Umbra, el perro guardián</title>
+        <g stroke="#6e5c3a" stroke-width="1.2" stroke-linejoin="round">
+          <path class="tail" d="M82,112 C96,108 104,98 106,84" fill="none" stroke="#1c1520" stroke-width="7" stroke-linecap="round"/>
+          <ellipse cx="60" cy="102" rx="26" ry="24" fill="#1c1520"/>
+          <rect x="45" y="100" width="11" height="26" rx="5.5" fill="#1c1520"/>
+          <rect x="64" y="100" width="11" height="26" rx="5.5" fill="#1c1520"/>
+          <ellipse cx="50.5" cy="127" rx="8" ry="4.5" fill="#1c1520"/>
+          <ellipse cx="69.5" cy="127" rx="8" ry="4.5" fill="#1c1520"/>
+          <path d="M43,42 L36,10 L56,33 Z" fill="#1c1520"/>
+          <path d="M77,42 L84,10 L64,33 Z" fill="#1c1520"/>
+          <ellipse cx="60" cy="54" rx="24" ry="22" fill="#1c1520"/>
+          <ellipse cx="60" cy="68" rx="13" ry="10" fill="#2e2432"/>
+        </g>
+        <path d="M44,36 L40,17 L52,31 Z" fill="#8e1b26"/>
+        <path d="M76,36 L80,17 L68,31 Z" fill="#8e1b26"/>
+        <circle cx="50" cy="44" r="2.6" fill="#8a6f45"/>
+        <circle cx="70" cy="44" r="2.6" fill="#8a6f45"/>
+        <g class="d-eyes">
+          <circle cx="51" cy="52" r="4.6" fill="#c9303f"/>
+          <circle cx="69" cy="52" r="4.6" fill="#c9303f"/>
+          <circle cx="51" cy="52.5" r="2" fill="#0c0a0f"/>
+          <circle cx="69" cy="52.5" r="2" fill="#0c0a0f"/>
+          <circle cx="52.6" cy="50.4" r="1.1" fill="#e8dfcf"/>
+          <circle cx="70.6" cy="50.4" r="1.1" fill="#e8dfcf"/>
+        </g>
+        <ellipse cx="60" cy="63" rx="4.8" ry="3.2" fill="#0c0a0f"/>
+        <path d="M54,71 Q57,74 60,71 Q63,74 66,71" fill="none" stroke="#9a8f9e" stroke-width="1" stroke-linecap="round"/>
+        <ellipse cx="60" cy="75.5" rx="3" ry="3.4" fill="#b3283a"/>
+        <rect x="40" y="78" width="40" height="7" rx="3.5" fill="#0c0a0f" stroke="#b89a5e" stroke-width="1"/>
+        <g fill="#b89a5e">
+          <path d="M44,78 L46,72 L48,78 Z M52,78 L54,72 L56,78 Z M64,78 L66,72 L68,78 Z M72,78 L74,72 L76,78 Z"/>
+          <rect x="58.8" y="85" width="2.4" height="10" rx=".6"/>
+          <rect x="55.8" y="88" width="8.4" height="2.4" rx=".6"/>
+        </g>
+      </svg>
+      <div class="ledger-head">
+        <h2>Registro</h2>
+        <span class="count" id="count"></span>
+      </div>
+      <ul class="list" id="list"></ul>
+      <div class="ledger-foot">
+        <span>Toca una entrada para retomar su resultado.</span>
+        <button class="btn" id="clear-hist">Vaciar registro</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  const STORE = "calc-gotica-historial";
+  const exprEl = document.getElementById("expr");
+  const resEl = document.getElementById("result");
+  const listEl = document.getElementById("list");
+  const countEl = document.getElementById("count");
+  const clearBtn = document.getElementById("clear-hist");
+
+  // tokens: numbers as strings, operators as symbols
+  let tokens = [];      // e.g. ["12", "+", "3.5"]
+  let justEvaluated = false;
+  let history = load();
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    const now = Date.now();
+    return [
+      { expr: "144 ÷ 12", val: "12", t: now - 1000 * 60 * 42, ex: true },
+      { expr: "666 × 3", val: "1998", t: now - 1000 * 60 * 60 * 5, ex: true },
+      { expr: "13 + 7 × 2", val: "27", t: now - 1000 * 60 * 60 * 26, ex: true }
+    ];
+  }
+  function save() {
+    try { localStorage.setItem(STORE, JSON.stringify(history)); } catch (e) {}
+  }
+
+  const isOp = s => ["+", "−", "×", "÷"].includes(s);
+  const last = () => tokens[tokens.length - 1];
+
+  function fmt(nStr) {
+    if (nStr === undefined) return "";
+    if (nStr === "-") return "−";
+    let neg = nStr.startsWith("-");
+    let s = neg ? nStr.slice(1) : nStr;
+    let [i, d] = s.split(".");
+    i = i.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    let out = d !== undefined ? i + "," + d : i;
+    return (neg ? "−" : "") + out;
+  }
+  function numToStr(n) {
+    if (!isFinite(n)) return null;
+    let r = parseFloat(n.toPrecision(12));
+    if (Math.abs(r) >= 1e15 || (Math.abs(r) < 1e-9 && r !== 0)) {
+      return r.toExponential(6).replace(/\.?0+e/, "e");
+    }
+    return String(r);
+  }
+  function fmtAny(s) {
+    return s.includes("e") ? s.replace("-", "−").replace(".", ",") : fmt(s);
+  }
+  function exprText(tks) {
+    return tks.map(t => isOp(t) ? ` ${t} ` : fmtAny(t)).join("");
+  }
+
+  function evaluate(tks) {
+    const t = tks.slice();
+    while (t.length && isOp(t[t.length - 1])) t.pop();
+    if (!t.length) return null;
+    // pass 1: × ÷
+    const stack = [parseFloat(t[0])];
+    const ops = [];
+    for (let i = 1; i < t.length; i += 2) {
+      const op = t[i], n = parseFloat(t[i + 1]);
+      if (op === "×") stack[stack.length - 1] *= n;
+      else if (op === "÷") {
+        if (n === 0) return { error: "No se divide entre cero" };
+        stack[stack.length - 1] /= n;
+      } else { ops.push(op); stack.push(n); }
+    }
+    let acc = stack[0];
+    ops.forEach((op, i) => { acc = op === "+" ? acc + stack[i + 1] : acc - stack[i + 1]; });
+    const s = numToStr(acc);
+    return s === null ? { error: "Resultado fuera de alcance" } : { value: s };
+  }
+
+  function render() {
+    resEl.classList.remove("err");
+    if (justEvaluated) return;
+    exprEl.textContent = exprText(tokens);
+    const l = last();
+    if (l === undefined) { resEl.textContent = "0"; return; }
+    const r = evaluate(tokens);
+    if (!isOp(l)) resEl.textContent = fmtAny(l);
+    if (r && r.value && tokens.length > 2) {
+      exprEl.textContent = exprText(tokens);
+      resEl.textContent = fmtAny(isOp(l) ? r.value : l);
+    }
+  }
+
+  function inputNum(d) {
+    if (justEvaluated) { tokens = []; justEvaluated = false; }
+    const l = last();
+    if (l === undefined || isOp(l)) {
+      tokens.push(d === "." ? "0." : d);
+    } else {
+      if (d === "." && l.includes(".")) return;
+      if (l.includes("e")) return;
+      if (l.replace(/[-.]/g, "").length >= 15) return;
+      tokens[tokens.length - 1] = (l === "0" && d !== ".") ? d : (l === "-0" && d !== ".") ? "-" + d : l + d;
+    }
+    render();
+  }
+  function inputOp(op) {
+    if (justEvaluated) { justEvaluated = false; }
+    const l = last();
+    if (l === undefined) tokens.push("0", op);
+    else if (isOp(l)) tokens[tokens.length - 1] = op;
+    else { if (l.endsWith(".")) tokens[tokens.length - 1] = l.slice(0, -1); tokens.push(op); }
+    render();
+  }
+  function act(a) {
+    const l = last();
+    if (a === "clear") { tokens = []; justEvaluated = false; exprEl.textContent = ""; render(); return; }
+    if (a === "back") {
+      if (justEvaluated) { justEvaluated = false; exprEl.textContent = ""; render(); return; }
+      if (l === undefined) return;
+      if (isOp(l) || l.length <= 1 || (l.length === 2 && l.startsWith("-")) || l.includes("e")) tokens.pop();
+      else tokens[tokens.length - 1] = l.slice(0, -1);
+      render(); return;
+    }
+    if (a === "neg") {
+      if (justEvaluated) justEvaluated = false;
+      if (l === undefined || isOp(l)) return;
+      tokens[tokens.length - 1] = l.startsWith("-") ? l.slice(1) : "-" + l;
+      render(); return;
+    }
+    if (a === "pct") {
+      if (justEvaluated) justEvaluated = false;
+      if (l === undefined || isOp(l)) return;
+      const s = numToStr(parseFloat(l) / 100);
+      if (s !== null) tokens[tokens.length - 1] = s;
+      render(); return;
+    }
+    if (a === "eq") equals();
+  }
+  function equals() {
+    if (justEvaluated || !tokens.length) return;
+    while (tokens.length && isOp(last())) tokens.pop();
+    if (!tokens.length) { render(); return; }
+    const text = exprText(tokens);
+    const r = evaluate(tokens);
+    exprEl.textContent = text + " =";
+    if (r.error) {
+      resEl.textContent = r.error;
+      resEl.classList.add("err");
+      tokens = []; justEvaluated = true;
+      return;
+    }
+    resEl.textContent = fmtAny(r.value);
+    if (tokens.length > 1) {
+      history.unshift({ expr: text, val: r.value, t: Date.now() });
+      if (history.length > 200) history.length = 200;
+      save(); renderHistory();
+    }
+    tokens = [r.value];
+    justEvaluated = true;
+  }
+
+  function timeAgo(t) {
+    const d = new Date(t);
+    const s = (Date.now() - t) / 1000;
+    if (s < 60) return "hace un instante";
+    if (s < 3600) return `hace ${Math.floor(s / 60)} min`;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const hh = d.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" });
+    if (t >= today.getTime()) return `hoy, ${hh}`;
+    if (t >= today.getTime() - 86400000) return `ayer, ${hh}`;
+    return d.toLocaleDateString("es", { day: "numeric", month: "short" }) + ", " + hh;
+  }
+  const roman = n => {
+    const m = [[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];
+    let r = ""; for (const [v, s] of m) while (n >= v) { r += s; n -= v; } return r;
+  };
+
+  function renderHistory() {
+    listEl.innerHTML = "";
+    const n = history.length;
+    countEl.textContent = n === 1 ? "1 operación" : `${n} operaciones`;
+    clearBtn.disabled = n === 0;
+    if (!n) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "El registro está en silencio. Realiza una operación para inscribirla aquí.";
+      listEl.appendChild(li);
+      return;
+    }
+    history.forEach((h, i) => {
+      const li = document.createElement("li");
+      li.className = "entry";
+      li.tabIndex = 0;
+      li.setAttribute("role", "button");
+      li.setAttribute("aria-label", `Usar resultado ${h.val}`);
+      li.innerHTML = `
+        <span class="num">${roman(n - i)}</span>
+        <span class="e-expr"></span>
+        <span class="e-res"><span class="e-val"></span><span class="e-time"></span></span>`;
+      li.querySelector(".e-expr").textContent = h.expr;
+      if (h.ex) {
+        const tag = document.createElement("span");
+        tag.className = "tag"; tag.textContent = "ejemplo";
+        li.querySelector(".e-expr").appendChild(tag);
+      }
+      li.querySelector(".e-val").textContent = fmtAny(h.val);
+      li.querySelector(".e-time").textContent = timeAgo(h.t);
+      const use = () => {
+        tokens = [h.val]; justEvaluated = false;
+        exprEl.textContent = "";
+        resEl.classList.remove("err");
+        resEl.textContent = fmtAny(h.val);
+      };
+      li.addEventListener("click", use);
+      li.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); use(); } });
+      listEl.appendChild(li);
+    });
+  }
+
+  // two-step clear confirmation (no confirm() dialogs in the viewer)
+  let armTimer = null;
+  clearBtn.addEventListener("click", () => {
+    if (!clearBtn.classList.contains("danger")) {
+      clearBtn.classList.add("danger");
+      clearBtn.textContent = "¿Seguro? Toca de nuevo";
+      armTimer = setTimeout(disarm, 3500);
+      return;
+    }
+    disarm();
+    history = []; save(); renderHistory();
+  });
+  function disarm() {
+    clearTimeout(armTimer);
+    clearBtn.classList.remove("danger");
+    clearBtn.textContent = "Vaciar registro";
+  }
+
+  document.getElementById("keys").addEventListener("click", e => {
+    const b = e.target.closest(".key"); if (!b) return;
+    if (b.dataset.num) inputNum(b.dataset.num);
+    else if (b.dataset.op) inputOp(b.dataset.op);
+    else if (b.dataset.act) act(b.dataset.act);
+  });
+
+  const keyMap = { "+": "k-add", "-": "k-sub", "*": "k-mul", "x": "k-mul", "/": "k-div", "Enter": "k-eq", "=": "k-eq",
+    "Backspace": "k-back", "Escape": "k-clear", "Delete": "k-clear", "%": "k-pct", ".": "k-dot", ",": "k-dot" };
+  document.addEventListener("keydown", e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.closest && e.target.closest(".entry, .btn")) return;
+    let id = /^[0-9]$/.test(e.key) ? "k-" + e.key : keyMap[e.key];
+    if (!id) return;
+    e.preventDefault();
+    const b = document.getElementById(id);
+    b.classList.add("pressed");
+    setTimeout(() => b.classList.remove("pressed"), 110);
+    b.click();
+  });
+
+  renderHistory();
+  render();
+})();
+</script>
+</body>
+</html>
